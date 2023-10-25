@@ -1,4 +1,4 @@
-class QuestionCard:
+class StationCard:
     station_name = ''
     answer = ''
 

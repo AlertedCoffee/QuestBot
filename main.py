@@ -1,7 +1,6 @@
 import asyncio
 import os
 from dotenv import load_dotenv
-import DB
 import random
 
 from aiogram import Bot, Dispatcher, types, filters
@@ -9,16 +8,19 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
-from Model import QuestionsFactory, QuestionModel
+from Model.StationsFactory import StationsFactory
 from Model.QuestStates import QuestStates
+import DB
+
 
 load_dotenv()
 bot = Bot(os.getenv('TOKEN'))
 dp = Dispatcher(bot=bot)
 
-start_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Начать', callback_data='start_quest')]])
+start_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Начать',
+                                                                             callback_data='start_quest')]])
 
-cards = QuestionsFactory.QuestionsFactory().get_cards()
+cards = StationsFactory().get_cards()
 
 
 @dp.message(filters.CommandStart())
@@ -37,7 +39,10 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
 
 @dp.callback_query(lambda c: c.data == 'start_quest')
 async def start_quest(call: types.CallbackQuery, state: FSMContext) -> None:
-    await bot.edit_message_reply_markup(chat_id=call.from_user.id, message_id=call.message.message_id, reply_markup=None)
+    await bot.edit_message_reply_markup(chat_id=call.from_user.id,
+                                        message_id=call.message.message_id,
+                                        reply_markup=None)
+
     # await call.message.answer(text='Ну погнали')
     await play_quest(call.message, state)
 
@@ -50,8 +55,10 @@ async def play_quest(message: Message, state: FSMContext) -> None:
         await bot.send_message(chat_id=user_id, text=station_name)
 
         await state.set_state(QuestStates.station_opened)
+
     elif len(DB.get_quest_stations(user_id)) == len(cards) + 1:
         await message.answer(text='Ты уже закончил квест, проходи за билетиком!')
+
     else:
         text = station_name + get_station(user_id)
         await message.answer(text=text)
@@ -62,7 +69,11 @@ async def play_quest(message: Message, state: FSMContext) -> None:
 def get_station(user_id: int) -> str:
     station = random.randint(0, len(cards) - 1)
 
-    while station in DB.get_quest_stations(user_id):
+    user_stations = []
+    for elem in DB.get_quest_stations(user_id)[:-1]:
+        user_stations.append(int(elem))
+
+    while station in user_stations:
         station = random.randint(0, len(cards) - 1)
 
     DB.save_quest_station(user_id, station)
