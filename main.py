@@ -37,6 +37,21 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
         await bot.send_message(chat_id=542687360, text=str(ex) + 'id: ' + str(message.from_user.id))
 
 
+@dp.message(filters.Command('alert'))
+async def alert_users(message: Message) -> None:
+    if message.from_user.id != 542687360:
+        return
+    try:
+        users = DB.get_user_list()
+        for user in users:
+            try:
+                await bot.send_message(text=message.html_text.replace('/alert', ''), chat_id=user[0], parse_mode='HTML')
+            except:
+                pass
+    except:
+        pass
+
+
 @dp.callback_query(lambda c: c.data == 'start_quest')
 async def start_quest(call: types.CallbackQuery, state: FSMContext) -> None:
     await bot.edit_message_reply_markup(chat_id=call.from_user.id,
