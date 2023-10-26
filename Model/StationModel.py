@@ -2,8 +2,8 @@ class StationCard:
     station_name = ''
     answer = ''
 
-    def __init__(self, question: str, answer: str):
-        self.station_name = question.strip().lower()
+    def __init__(self, station_name: str, answer: str):
+        self.station_name = station_name.strip().lower()
         self.answer = answer.strip().lower()
 
     def check_answer(self, answer: str):
