@@ -98,7 +98,7 @@ def get_station(user_id: int) -> str:
 
 @dp.message(QuestStates.station_opened)
 async def check_answer(message: Message, state: FSMContext):
-    user_id = message.from_user.id
+    user_id = message.chat.id
     if message.text.strip().lower() == cards[int(DB.get_quest_stations(user_id)[-2])].answer:
         await message.answer(text=TextFiles.RIGHT_ANSWER)
         DB.close_station(user_id)
@@ -106,6 +106,14 @@ async def check_answer(message: Message, state: FSMContext):
         await play_quest(message, state)
     else:
         await message.answer(text=TextFiles.WRONG_ANSWER)
+
+
+@dp.message()
+async def check_answer(message: Message, state: FSMContext):
+    user_id = message.chat.id
+    await bot.send_message(chat_id=user_id, text="Что-то пошло не так(( \nНапиши /start, "
+                                                 "чтобы я выдал тебе твое задание. "
+                                                 "Твой прогресс и последняя станция сохранятся)")
 
 
 async def main() -> None:
