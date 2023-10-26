@@ -111,9 +111,7 @@ async def check_answer(message: Message, state: FSMContext):
 @dp.message()
 async def check_answer(message: Message, state: FSMContext):
     user_id = message.chat.id
-    await bot.send_message(chat_id=user_id, text="Что-то пошло не так(( \nНапиши /start, "
-                                                 "чтобы я выдал тебе твое задание. "
-                                                 "Твой прогресс и последняя станция сохранятся)")
+    await bot.send_message(chat_id=user_id, text=TextFiles.ERROR_MESSAGE)
 
 
 async def main() -> None:
