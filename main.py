@@ -16,7 +16,7 @@ from Config import TextFiles
 
 
 load_dotenv()
-bot = Bot(os.getenv('TOKEN'))
+bot = Bot(os.getenv('TEST_TOKEN'))
 dp = Dispatcher(bot=bot)
 
 start_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Начать',
@@ -33,9 +33,6 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
             DB.add_user(message.from_user.id, message.from_user.username)
         await message.answer(f"{TextFiles.GREETING}",
                              reply_markup=start_keyboard)
-        # else:
-        #     await message.answer(text=f'А тебя я уже знаю, {message.from_user.username}!')
-        #     await play_quest(message, state)
     except Exception as ex:
         await bot.send_message(chat_id=542687360, text=str(ex) + 'id: ' + str(message.from_user.id))
 
@@ -46,7 +43,6 @@ async def start_quest(call: types.CallbackQuery, state: FSMContext) -> None:
                                         message_id=call.message.message_id,
                                         reply_markup=None)
 
-    # await call.message.answer(text='Ну погнали')
     await play_quest(call.message, state)
 
 
