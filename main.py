@@ -39,7 +39,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
 
 @dp.message(filters.Command('alert'))
 async def alert_users(message: Message) -> None:
-    if message.from_user.id != 542687360:
+    if message.from_user.id not in [542687360, 890780591]:
         return
     try:
         users = DB.get_user_list()
