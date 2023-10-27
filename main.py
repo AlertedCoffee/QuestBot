@@ -100,7 +100,7 @@ def get_station(user_id: int) -> str:
 async def check_answer(message: Message, state: FSMContext):
     user_id = message.chat.id
     try:
-        print(message.text + ': ' + message.from_user.username)
+        # print(message.text + ': ' + message.from_user.username)
         if message.text.strip().lower() == cards[int(DB.get_quest_stations(user_id)[-2])].answer:
             await message.answer(text=TextFiles.RIGHT_ANSWER)
             DB.close_station(user_id)
@@ -109,8 +109,9 @@ async def check_answer(message: Message, state: FSMContext):
         else:
             await message.answer(text=TextFiles.WRONG_ANSWER)
     except:
-        print(message.from_user.username + ' - Шлет что-то странное')
-        await message.reply(text="Ты отправляешь что-то странное. Я принимаю только текст!")
+        await message.reply(text="Ты отправляешь что-то странное. Я принимаю только текст!\n"
+                                 "А возможно у тебя не настроен username в telegram")
+        # print(message.from_user.username + ' - Шлет что-то странное')
 
 
 @dp.message()
@@ -119,7 +120,8 @@ async def check_answer(message: Message, state: FSMContext):
     try:
         print(message.text + ': ' + message.from_user.username)
     except:
-        print(message.from_user.username + ' - Шлет что-то странное')
+        pass
+        # print(message.from_user.username + ' - Шлет что-то странное')
 
     await bot.send_message(chat_id=user_id, text=TextFiles.ERROR_MESSAGE)
 
