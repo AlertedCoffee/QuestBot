@@ -109,13 +109,18 @@ async def check_answer(message: Message, state: FSMContext):
         else:
             await message.answer(text=TextFiles.WRONG_ANSWER)
     except:
+        print(message.from_user.username + ' - Шлет что-то странное')
         await message.reply(text="Ты отправляешь что-то странное. Я принимаю только текст!")
 
 
 @dp.message()
 async def check_answer(message: Message, state: FSMContext):
     user_id = message.chat.id
-    print(message.text + ': ' + message.from_user.username)
+    try:
+        print(message.text + ': ' + message.from_user.username)
+    except:
+        print(message.from_user.username + ' - Шлет что-то странное')
+
     await bot.send_message(chat_id=user_id, text=TextFiles.ERROR_MESSAGE)
 
 
