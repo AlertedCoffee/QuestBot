@@ -52,6 +52,22 @@ async def alert_users(message: Message) -> None:
         pass
 
 
+@dp.message(filters.Command('finish'))
+async def finish_quest(message: Message) -> None:
+    if message.from_user.id not in [542687360, 890780591]:
+        return
+    global FINISH_FLAG
+    FINISH_FLAG = True
+
+
+@dp.message(filters.Command('finish_cancel'))
+async def finish_quest_cancel(message: Message) -> None:
+    if message.from_user.id not in [542687360, 890780591]:
+        return
+    global FINISH_FLAG
+    FINISH_FLAG = False
+
+
 @dp.callback_query(lambda c: c.data == 'start_quest')
 async def start_quest(call: types.CallbackQuery, state: FSMContext) -> None:
     await bot.edit_message_reply_markup(chat_id=call.from_user.id,
@@ -60,24 +76,32 @@ async def start_quest(call: types.CallbackQuery, state: FSMContext) -> None:
 
     await play_quest(call.message, state)
 
+FINISH_FLAG = False
+
 
 async def play_quest(message: Message, state: FSMContext) -> None:
     user_id = message.chat.id
-    station_name = 'Отправляйся на станцию: '
-    if DB.get_station_status(user_id):
-        station_name += cards[int(DB.get_quest_stations(user_id)[-2])].station_name
-        await bot.send_message(chat_id=user_id, text=station_name)
+    if not FINISH_FLAG:
+        station_name = 'Отправляйся на станцию: '
+        if DB.get_station_status(user_id):
+            station_name += cards[int(DB.get_quest_stations(user_id)[-2])].station_name
+            await bot.send_message(chat_id=user_id, text=station_name)
 
-        await state.set_state(QuestStates.station_opened)
+            await state.set_state(QuestStates.station_opened)
 
-    elif len(DB.get_quest_stations(user_id)) == len(cards) + 1:
-        await message.answer(text=TextFiles.FINISH)
+        elif len(DB.get_quest_stations(user_id)) == len(cards) + 1:
+            await message.answer(text=TextFiles.FINISH)
 
+        else:
+            text = station_name + get_station(user_id)
+            await message.answer(text=text)
+
+            await state.set_state(QuestStates.station_opened)
     else:
-        text = station_name + get_station(user_id)
-        await message.answer(text=text)
-
-        await state.set_state(QuestStates.station_opened)
+        if len(DB.get_quest_stations(user_id)) == len(cards) + 1:
+            await message.answer(text=TextFiles.FINISH)
+        else:
+            await message.answer(text='Квеста завершен! Ответы больше не принимаются)')
 
 
 def get_station(user_id: int) -> str:
