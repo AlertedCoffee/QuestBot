@@ -99,18 +99,23 @@ def get_station(user_id: int) -> str:
 @dp.message(QuestStates.station_opened)
 async def check_answer(message: Message, state: FSMContext):
     user_id = message.chat.id
-    if message.text.strip().lower() == cards[int(DB.get_quest_stations(user_id)[-2])].answer:
-        await message.answer(text=TextFiles.RIGHT_ANSWER)
-        DB.close_station(user_id)
-        await state.set_state(QuestStates.station_closed)
-        await play_quest(message, state)
-    else:
-        await message.answer(text=TextFiles.WRONG_ANSWER)
+    try:
+        print(message.text + ': ' + message.from_user.username)
+        if message.text.strip().lower() == cards[int(DB.get_quest_stations(user_id)[-2])].answer:
+            await message.answer(text=TextFiles.RIGHT_ANSWER)
+            DB.close_station(user_id)
+            await state.set_state(QuestStates.station_closed)
+            await play_quest(message, state)
+        else:
+            await message.answer(text=TextFiles.WRONG_ANSWER)
+    except:
+        await message.reply(text="Ты отправляешь что-то странное. Я принимаю только текст!")
 
 
 @dp.message()
 async def check_answer(message: Message, state: FSMContext):
     user_id = message.chat.id
+    print(message.text + ': ' + message.from_user.username)
     await bot.send_message(chat_id=user_id, text=TextFiles.ERROR_MESSAGE)
 
 
