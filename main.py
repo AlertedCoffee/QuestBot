@@ -27,14 +27,11 @@ cards = StationsFactory().get_cards()
 
 @dp.message(filters.CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
-    try:
-        await state.set_state(QuestStates.start_state)
-        if not DB.user_exist(message.from_user.id):
-            DB.add_user(message.from_user.id, message.from_user.username)
-        await message.answer(f"{TextFiles.GREETING}",
-                             reply_markup=start_keyboard)
-    except Exception as ex:
-        await bot.send_message(chat_id=542687360, text=str(ex) + 'id: ' + str(message.from_user.id))
+    await state.set_state(QuestStates.start_state)
+    if not DB.user_exist(message.from_user.id):
+        DB.add_user(message.from_user.id, message.from_user.username)
+    await message.answer(f"{TextFiles.GREETING}",
+                         reply_markup=start_keyboard)
 
 
 @dp.message(filters.Command('alert'))
@@ -124,7 +121,7 @@ def get_station(user_id: int) -> str:
 async def check_answer(message: Message, state: FSMContext):
     user_id = message.chat.id
     try:
-        # print(message.text + ': ' + message.from_user.username)
+        print(message.text + ': ' + str(message.chat.id))
         if message.text.strip().lower() == cards[int(DB.get_quest_stations(user_id)[-2])].answer:
             await message.answer(text=TextFiles.RIGHT_ANSWER)
             DB.close_station(user_id)
@@ -135,17 +132,16 @@ async def check_answer(message: Message, state: FSMContext):
     except:
         await message.reply(text="Ты отправляешь что-то странное. Я принимаю только текст!\n"
                                  "А возможно у тебя не настроен username в telegram")
-        # print(message.from_user.username + ' - Шлет что-то странное')
+        print(str(message.chat.id) + ' - Шлет что-то странное')
 
 
 @dp.message()
 async def check_answer(message: Message, state: FSMContext):
     user_id = message.chat.id
     try:
-        print(message.text + ': ' + message.from_user.username)
+        print(message.text + ': ' + str(message.chat.id))
     except:
         pass
-        # print(message.from_user.username + ' - Шлет что-то странное')
 
     await bot.send_message(chat_id=user_id, text=TextFiles.ERROR_MESSAGE)
 
