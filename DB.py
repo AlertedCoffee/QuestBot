@@ -8,10 +8,20 @@ def create_table() -> None:
     cursor.execute("""CREATE TABLE IF NOT EXISTS users(
        user_id INT PRIMARY KEY,
        user_name TEXT,
-       quest_stations TEXT,
-       question_opened bit,
+       FIO TEXT,
+       branch TEXT,
        score INT);
        """)
+    connection.commit()
+
+    cursor.execute("""CREATE TABLE IF NOT EXISTS users_stations(
+           user_id INT,
+           question_id INT,
+           question_group INT,
+           question_opened bit,
+           CONSTRAINT [users_stations_PK] PRIMARY KEY (user_id, question_id, question_group),
+           CONSTRAINT [FK_stations_users] FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE);
+           """)
     connection.commit()
 
     connection.close()
@@ -23,6 +33,8 @@ def drop_table():
 
     cursor.execute("""drop TABLE IF EXISTS users
            """)
+    cursor.execute("""drop TABLE IF EXISTS users_stations
+               """)
     connection.commit()
     connection.close()
 
@@ -32,16 +44,67 @@ def add_user(user_id: int, user_name: str) -> None:
     cursor = connection.cursor()
 
     cursor.execute(f"""insert into users
-    values('{user_id}', '{user_name}', '', 0, 0)""")
+    values('{user_id}', '{user_name}', '', '', 0)""")
     connection.commit()
     connection.close()
 
 
-def get_user_list() -> []:
+def set_user_fio(user_id: int, fio: str) -> None:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""Update users
+                   set FIO = '{fio}'
+                   where user_id = '{user_id}';""")
+
+    connection.commit()
+    connection.close()
+
+
+def set_user_branch(user_id: int, branch: str) -> None:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""Update users
+                   set branch = '{branch}'
+                   where user_id = '{user_id}';""")
+
+    connection.commit()
+    connection.close()
+
+
+def get_auth(user_id: int) -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""
+                    select FIO, branch from users
+                    where user_id = {user_id}
+                    """)
+    result = cursor.fetchall()
+    connection.close()
+
+    if len(result) > 0:
+        return result[0]
+    else:
+        return []
+
+
+def get_users_list() -> []:
     connection = sql.connect('userbase.db')
     cursor = connection.cursor()
 
     cursor.execute(f"SELECT * FROM users;")
+    result = cursor.fetchall()
+    connection.close()
+    return result
+
+
+def get_stations_list() -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"SELECT * FROM users_stations;")
     result = cursor.fetchall()
     connection.close()
     return result
@@ -54,90 +117,95 @@ def drop_user(user_id: int) -> None:
     cursor.execute(f"delete from users"
                    f" where user_id = '{user_id}';")
 
-    connection.commit()
-    connection.close()
-
-
-def get_quest_stations_string(user_id: int) -> str:
-    connection = sql.connect('userbase.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f"SELECT quest_stations FROM users where user_id = '{user_id}';")
-    string_result = cursor.fetchall()
-    connection.close()
-
-    try:
-        return string_result[0][0]
-    except:
-        return ''
-
-
-def get_quest_stations(user_id: int) -> []:
-    connection = sql.connect('userbase.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f"SELECT quest_stations FROM users where user_id = '{user_id}';")
-    string_result = cursor.fetchall()
-    connection.close()
-
-    try:
-        return str(string_result[0][0]).split('&')
-    except:
-        return []
-
-
-def save_quest_station(user_id: int, station: int) -> None:
-    stations = get_quest_stations_string(user_id) + str(station) + '&'
-
-    connection = sql.connect('userbase.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f"""Update users
-                   set quest_stations = '{stations}'
-                   where user_id = '{user_id}';""")
-
-    connection.commit()
-    connection.close()
-
-
-def get_station_status(user_id: int) -> bool:
-    connection = sql.connect('userbase.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f"SELECT question_opened FROM users where user_id = '{user_id}';")
-    string_result = cursor.fetchall()
-    result = string_result[0][0]
-
-    connection.close()
-
-    if result == 0:
-        return False
-    else:
-        return True
-
-
-def open_station(user_id: int) -> None:
-    connection = sql.connect('userbase.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f"""Update users
-                   set question_opened = 1
-                   where user_id = '{user_id}';""")
-
-    connection.commit()
-    connection.close()
-
-
-def close_station(user_id: int) -> None:
-    connection = sql.connect('userbase.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f"Update users"
-                   f" set question_opened = 0"
+    cursor.execute(f"delete from users_stations"
                    f" where user_id = '{user_id}';")
 
     connection.commit()
     connection.close()
+
+
+def get_first_group_stations(user_id: int) -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and "
+                   f"question_group = 1; ")
+    string_result = cursor.fetchall()
+    connection.close()
+
+    try:
+        return string_result
+    except:
+        return []
+
+
+def get_second_group_stations(user_id: int) -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and "
+                   f"question_group = 2; ")
+    string_result = cursor.fetchall()
+    connection.close()
+
+    try:
+        return string_result
+    except:
+        return []
+
+
+def get_third_group_stations(user_id: int) -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and "
+                   f"question_group = 3; ")
+    string_result = cursor.fetchall()
+    connection.close()
+
+    try:
+        return string_result
+    except:
+        return []
+
+
+def open_station(user_id: int, question_id: int, group: int) -> None:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""insert into users_stations
+                   values('{user_id}', '{question_id}', '{group}', 1);""")
+
+    connection.commit()
+    connection.close()
+
+
+def close_station(user_id: int, question_id: int, group: int) -> None:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""Update users_stations
+                   set question_opened = 0
+                   where user_id = '{user_id}' and question_id = '{question_id}' and question_group = '{group}';""")
+
+    connection.commit()
+    connection.close()
+
+
+# def get_station_status(user_id: int) -> bool:
+#     connection = sql.connect('userbase.db')
+#     cursor = connection.cursor()
+#
+#     cursor.execute(f"SELECT question_opened FROM users where user_id = '{user_id}';")
+#     string_result = cursor.fetchall()
+#     result = string_result[0][0]
+#
+#     connection.close()
+#
+#     if result == 0:
+#         return False
+#     else:
+#         return True
 
 
 def get_score(user_id: int) -> int:
@@ -152,11 +220,11 @@ def get_score(user_id: int) -> int:
     return result
 
 
-def add_score(user_id: int) -> None:
+def add_score(user_id: int, value: int) -> None:
     connection = sql.connect('userbase.db')
     cursor = connection.cursor()
 
-    score = int(get_score(user_id)) + 1
+    score = int(get_score(user_id)) + value
 
     cursor.execute(f"Update users"
                    f" set score = {score}"
@@ -166,14 +234,14 @@ def add_score(user_id: int) -> None:
     connection.close()
 
 
-def create_user(user_id: int, user_name: str, question_stations: str, score: int) -> None:
-    connection = sql.connect('userbase.db')
-    cursor = connection.cursor()
-
-    cursor.execute(f"""insert into users
-            values('{user_id}', '{user_name}', '{question_stations}', {score})""")
-    connection.commit()
-    connection.close()
+# def create_user(user_id: int, user_name: str, question_stations: str, score: int) -> None:
+#     connection = sql.connect('userbase.db')
+#     cursor = connection.cursor()
+#
+#     cursor.execute(f"""insert into users
+#             values('{user_id}', '{user_name}', '{question_stations}', {score})""")
+#     connection.commit()
+#     connection.close()
 
 
 def user_exist(user_id: int) -> bool:
