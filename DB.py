@@ -128,8 +128,9 @@ def get_first_group_stations(user_id: int) -> []:
     connection = sql.connect('userbase.db')
     cursor = connection.cursor()
 
-    cursor.execute(f"SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and "
-                   f"question_group = 1; ")
+    cursor.execute(f"""
+    SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and question_group = 0
+    order by question_opened;""")
     string_result = cursor.fetchall()
     connection.close()
 
@@ -143,8 +144,10 @@ def get_second_group_stations(user_id: int) -> []:
     connection = sql.connect('userbase.db')
     cursor = connection.cursor()
 
-    cursor.execute(f"SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and "
-                   f"question_group = 2; ")
+    cursor.execute(f"""
+    SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and question_group = 1 
+    order by question_opened;
+""")
     string_result = cursor.fetchall()
     connection.close()
 
@@ -158,8 +161,9 @@ def get_third_group_stations(user_id: int) -> []:
     connection = sql.connect('userbase.db')
     cursor = connection.cursor()
 
-    cursor.execute(f"SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and "
-                   f"question_group = 3; ")
+    cursor.execute(f"""
+    SELECT question_id, question_opened FROM users_stations where user_id = '{user_id}' and question_group = 2 
+    order by question_opened;""")
     string_result = cursor.fetchall()
     connection.close()
 

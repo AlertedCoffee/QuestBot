@@ -10,9 +10,12 @@ from aiogram.fsm.context import FSMContext
 
 from Model.StationsFactory import StationsFactory
 from Model.QuestStates import QuestStates
+from Model.StationModel import StationCard
 import DB
 from Config import TextFiles
 from Handlers import AdminCommands
+from keyboards import MainKeyboards
+
 
 # import background
 
@@ -21,18 +24,10 @@ load_dotenv()
 bot = Bot(os.getenv('TEST_TOKEN'))
 dp = Dispatcher(bot=bot)
 
-start_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Начать',
-                                                                             callback_data='start_quest')]])
 
-continue_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Продолжить',
-                                                                                callback_data='continue_quest')],
-                                                          [InlineKeyboardButton(text='Переименоваться',
-                                                                                callback_data='start_quest')]])
-
-branch_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='ОИТ', callback_data='ОИТ'),
-                                                         InlineKeyboardButton(text='ОЭС', callback_data='ОЭС'),
-                                                         InlineKeyboardButton(text='ОМЭиКС', callback_data='ОМЭиКС')]])
 FINISH_FLAG = False
+
+cards = []
 
 
 @dp.message(filters.CommandStart())
@@ -44,11 +39,11 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
 
     if not DB.user_exist(message.from_user.id):
         DB.add_user(message.from_user.id, message.from_user.username)
-        keyboard = start_keyboard
+        keyboard = MainKeyboards.start_keyboard
     elif "" in auth:
-        keyboard = start_keyboard
+        keyboard = MainKeyboards.start_keyboard
     else:
-        keyboard = continue_keyboard
+        keyboard = MainKeyboards.continue_keyboard
         prefix = f"Рад приветствовать тебя снова, {auth[0]} из {auth[1]}!"
     await message.answer(f"{prefix + TextFiles.GREETING}",
                          reply_markup=keyboard)
@@ -83,7 +78,7 @@ async def fio_auth(message: Message, state: FSMContext) -> None:
         await message.answer("Записано!")
 
         await state.set_state(QuestStates.branch_auth)
-        await message.answer(text=TextFiles.BRANCH_AUTH, reply_markup=branch_keyboard)
+        await message.answer(text=TextFiles.BRANCH_AUTH, reply_markup=MainKeyboards.branch_keyboard)
 
     except:
         await message.reply(text=TextFiles.TYPE_ERROR_MESSAGE)
@@ -102,63 +97,89 @@ async def branch_auth(call: types.CallbackQuery, state: FSMContext) -> None:
 
 
 async def play_quest(message: Message, state: FSMContext) -> None:
+    card = get_current_station(message, state)
+
+    if card.answer == '':
+        await message.answer(text=TextFiles.FINISH)
+        return
+    elif FINISH_FLAG:
+        await message.answer(text=TextFiles.QUEST_CLOSED)
+        return
+
+    await message.answer(card.question)
+    await state.set_state(QuestStates.station_opened)
+
+
+def get_current_station(message: Message, state: FSMContext) -> StationCard:
     user_id = message.chat.id
-    await message.answer("не играется")
-    # if FINISH_FLAG:
-    #     if len(DB.get_quest_stations(user_id)) == len(cards) + 1:
-    #         await message.answer(text=TextFiles.FINISH)
+
+    users_stations = [DB.get_first_group_stations(user_id),
+                      DB.get_second_group_stations(user_id),
+                      DB.get_third_group_stations(user_id)]
+
+    if len(users_stations[0]) + len(users_stations[1]) + len(users_stations[2]) == 15:
+        return StationCard('', '', 0, 0)  # complete
+
+    for group_id, station in enumerate(users_stations):
+        if len(station) <= 5:
+            if len(station) == 0:
+                return get_random_station(user_id, group_id, station)
+
+            elif len(station) == 5 and station[-1][1] == 0:
+                pass
+
+            elif station[-1][1] == 1:
+                return cards[group_id][station[-1][0]]
+            else:
+                return get_random_station(user_id, group_id, station)
+
+
+def get_random_station(user_id: int, group: int, user_stations: []) -> StationCard:
+    station = random.randint(0, len(cards[group]) - 1)
+
+    try:
+        while station_existing_check(station, user_stations):
+            station = random.randint(0, len(cards[group]) - 1)
+    except:
+        pass
+
+    DB.open_station(user_id, station, group)
+
+    return cards[group][station]
+
+
+def station_existing_check(station: int, user_stations) -> bool:
+    for i in user_stations:
+        if station == i[0]:
+            return True
+        else:
+            return False
+
+
+@dp.message(QuestStates.station_opened)
+async def check_answer(message: Message, state: FSMContext):
+    user_id = message.chat.id
+
+    card = get_current_station(message, state)
+
+    DB.close_station(user_id, card.id, card.group)
+
+    await state.set_state(QuestStates.station_closed)
+
+    await play_quest(message, state)
+
+    # try:
+    #     print(message.text + ': ' + str(message.chat.id))
+    #     if message.text.strip().lower() == cards[int(DB.get_quest_stations(user_id)[-2])].answer:
+    #         await message.answer(text=TextFiles.RIGHT_ANSWER)
+    #         DB.close_station(user_id)
+    #         await state.set_state(QuestStates.station_closed)
+    #         await play_quest(message, state)
     #     else:
-    #         await message.answer(text='Квеста завершен! Ответы больше не принимаются)')
-    #     return
-    #
-    # station_name = 'Отправляйся на станцию: '
-    # if DB.get_station_status(user_id):
-    #     station_name += cards[int(DB.get_quest_stations(user_id)[-2])].question
-    #     await bot.send_message(chat_id=user_id, text=station_name)
-    #
-    #     await state.set_state(QuestStates.station_opened)
-    #
-    # elif len(DB.get_quest_stations(user_id)) == len(cards) + 1:
-    #     await message.answer(text=TextFiles.FINISH)
-    #
-    # else:
-    #     text = station_name + get_station(user_id)
-    #     await message.answer(text=text)
-    #
-    #     await state.set_state(QuestStates.station_opened)
-
-
-# def get_station(user_id: int) -> str:
-# station = random.randint(0, len(cards) - 1)
-#
-# user_stations = []
-# for elem in DB.get_quest_stations(user_id)[:-1]:
-#     user_stations.append(int(elem))
-#
-# while station in user_stations:
-#     station = random.randint(0, len(cards) - 1)
-#
-# DB.save_quest_station(user_id, station)
-# DB.open_station(user_id)
-#
-# return cards[station].question
-
-
-# @dp.message(QuestStates.station_opened)
-# async def check_answer(message: Message, state: FSMContext):
-#     user_id = message.chat.id
-#     try:
-#         print(message.text + ': ' + str(message.chat.id))
-#         if message.text.strip().lower() == cards[int(DB.get_quest_stations(user_id)[-2])].answer:
-#             await message.answer(text=TextFiles.RIGHT_ANSWER)
-#             DB.close_station(user_id)
-#             await state.set_state(QuestStates.station_closed)
-#             await play_quest(message, state)
-#         else:
-#             await message.answer(text=TextFiles.WRONG_ANSWER)
-#     except:
-#         await message.reply(text=TextFiles.TYPE_ERROR_MESSAGE)
-#         print(str(message.chat.id) + ' - Шлет что-то странное')
+    #         await message.answer(text=TextFiles.WRONG_ANSWER)
+    # except:
+    #     await message.reply(text=TextFiles.TYPE_ERROR_MESSAGE)
+    #     print(str(message.chat.id) + ' - Шлет что-то странное')
 
 
 @dp.message()
@@ -193,6 +214,12 @@ async def finish_quest_cancel(message: Message) -> None:
 async def main() -> None:
     dp.include_router(AdminCommands.router)
     AdminCommands.bot_init(bot)
+
+    global cards
+    cards = [StationsFactory().get_cards_first_group(),
+             StationsFactory().get_cards_second_group(),
+             StationsFactory().get_cards_third_group()]
+
     # await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
