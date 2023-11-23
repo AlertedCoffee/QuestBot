@@ -30,6 +30,38 @@ FINISH_FLAG = False
 cards = []
 
 
+@dp.message(filters.Command('finish'))
+async def finish_quest(message: Message) -> None:
+    if message.from_user.id not in [542687360]:
+        return
+    global FINISH_FLAG
+    FINISH_FLAG = True
+
+
+@dp.message(filters.Command('finish_cancel'))
+async def finish_quest_cancel(message: Message) -> None:
+    if message.from_user.id not in [542687360]:
+        return
+    global FINISH_FLAG
+    FINISH_FLAG = False
+
+
+@dp.message(filters.Command('alert'))
+async def alert_users(message: Message) -> None:
+    if message.from_user.id not in [542687360]:
+        return
+    try:
+        users = DB.get_users_list()
+        for user in users:
+            try:
+
+                await bot.send_message(text=message.html_text.replace('/alert', ''), chat_id=user[0], parse_mode='HTML')
+            except:
+                pass
+    except:
+        pass
+
+
 @dp.message(filters.CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     await state.set_state(QuestStates.start_state)
@@ -135,17 +167,13 @@ def get_current_station(message: Message, state: FSMContext) -> StationCard:
 
 
 def get_random_station(user_id: int, group: int, user_stations: []) -> StationCard:
-    station = random.randint(0, len(cards[group]) - 1)
-
-    try:
-        while station_existing_check(station, user_stations):
+    while True:
+        try:
             station = random.randint(0, len(cards[group]) - 1)
-    except:
-        pass
-
-    DB.open_station(user_id, station, group)
-
-    return cards[group][station]
+            DB.open_station(user_id, station, group)
+            return cards[group][station]
+        except:
+            pass
 
 
 def station_existing_check(station: int, user_stations) -> bool:
@@ -162,24 +190,20 @@ async def check_answer(message: Message, state: FSMContext):
 
     card = get_current_station(message, state)
 
-    DB.close_station(user_id, card.id, card.group)
+    try:
+        print(message.text + ': ' + str(message.chat.id))
+        await message.answer(text=TextFiles.RIGHT_ANSWER)
+        DB.close_station(user_id, card.id, card.group)
 
-    await state.set_state(QuestStates.station_closed)
+        if card.check_answer(message.text):
+            DB.add_score(user_id, card.group + 1)
 
-    await play_quest(message, state)
+        await state.set_state(QuestStates.station_closed)
+        await play_quest(message, state)
 
-    # try:
-    #     print(message.text + ': ' + str(message.chat.id))
-    #     if message.text.strip().lower() == cards[int(DB.get_quest_stations(user_id)[-2])].answer:
-    #         await message.answer(text=TextFiles.RIGHT_ANSWER)
-    #         DB.close_station(user_id)
-    #         await state.set_state(QuestStates.station_closed)
-    #         await play_quest(message, state)
-    #     else:
-    #         await message.answer(text=TextFiles.WRONG_ANSWER)
-    # except:
-    #     await message.reply(text=TextFiles.TYPE_ERROR_MESSAGE)
-    #     print(str(message.chat.id) + ' - Шлет что-то странное')
+    except:
+        await message.reply(text=TextFiles.TYPE_ERROR_MESSAGE)
+        print(str(message.chat.id) + ' - Шлет что-то странное')
 
 
 @dp.message()
@@ -193,22 +217,6 @@ async def check_answer(message: Message, state: FSMContext):
         await bot.send_message(chat_id=user_id, text=TextFiles.ERROR_MESSAGE)
     else:
         await message.answer(TextFiles.INVALID_TEXT)
-
-
-@dp.message(filters.Command('finish'))
-async def finish_quest(message: Message) -> None:
-    if message.from_user.id not in [542687360]:
-        return
-    global FINISH_FLAG
-    FINISH_FLAG = True
-
-
-@dp.message(filters.Command('finish_cancel'))
-async def finish_quest_cancel(message: Message) -> None:
-    if message.from_user.id not in [542687360]:
-        return
-    global FINISH_FLAG
-    FINISH_FLAG = False
 
 
 async def main() -> None:
