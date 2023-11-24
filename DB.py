@@ -1,4 +1,5 @@
 import sqlite3 as sql
+from datetime import datetime
 
 
 def create_table() -> None:
@@ -10,7 +11,8 @@ def create_table() -> None:
        user_name TEXT,
        FIO TEXT,
        branch TEXT,
-       score INT);
+       score INT,
+       time BIGINT);
        """)
     connection.commit()
 
@@ -18,6 +20,7 @@ def create_table() -> None:
            user_id INT,
            question_id INT,
            question_group INT,
+           time DATETIME,
            question_opened bit,
            CONSTRAINT [users_stations_PK] PRIMARY KEY (user_id, question_id, question_group),
            CONSTRAINT [FK_stations_users] FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE);
@@ -44,7 +47,7 @@ def add_user(user_id: int, user_name: str) -> None:
     cursor = connection.cursor()
 
     cursor.execute(f"""insert into users
-    values('{user_id}', '{user_name}', '', '', 0)""")
+    values('{user_id}', '{user_name}', '', '', 0, 0)""")
     connection.commit()
     connection.close()
 
@@ -178,10 +181,27 @@ def open_station(user_id: int, question_id: int, group: int) -> None:
     cursor = connection.cursor()
 
     cursor.execute(f"""insert into users_stations
-                   values('{user_id}', '{question_id}', '{group}', 1);""")
+                   values('{user_id}', '{question_id}', '{group}', '{datetime.now()}', 1);""")
 
     connection.commit()
     connection.close()
+
+
+def get_time_delt(user_id: int, question_id: int, group: int) -> int:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""
+    SELECT time FROM users_stations 
+    where user_id = '{user_id}' and question_group = '{group}' and question_id = '{question_id}'
+    """)
+    result = cursor.fetchall()
+    connection.close()
+
+    try:
+        return (datetime.now() - datetime.fromisoformat(result[0][0])).seconds
+    except:
+        return -1
 
 
 def close_station(user_id: int, question_id: int, group: int) -> None:
@@ -230,9 +250,39 @@ def add_score(user_id: int, value: int) -> None:
 
     score = int(get_score(user_id)) + value
 
-    cursor.execute(f"Update users"
-                   f" set score = {score}"
-                   f" where user_id = '{user_id}';")
+    cursor.execute(f"""
+    Update users
+    set score = {score}
+    where user_id = '{user_id}';
+    """)
+
+    connection.commit()
+    connection.close()
+
+
+def get_time(user_id: int) -> int:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"SELECT time FROM users where user_id = '{user_id}';")
+    string_result = cursor.fetchall()
+    result = string_result[0][0]
+
+    connection.close()
+    return result
+
+
+def add_time(user_id: int, value: int) -> None:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    time = int(get_time(user_id)) + value
+
+    cursor.execute(f"""
+    Update users
+    set time = {time}
+    where user_id = '{user_id}';
+    """)
 
     connection.commit()
     connection.close()

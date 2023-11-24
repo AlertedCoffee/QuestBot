@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import os
 from dotenv import load_dotenv
 import random
@@ -13,7 +14,7 @@ from Model.QuestStates import QuestStates
 from Model.StationModel import StationCard
 import DB
 from Config import TextFiles
-from Handlers import AdminCommands
+from Handlers import MainHandler
 from keyboards import MainKeyboards
 
 
@@ -75,7 +76,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
     elif "" in auth:
         keyboard = MainKeyboards.start_keyboard
     else:
-        keyboard = MainKeyboards.continue_keyboard
+        keyboard = MainKeyboards.continue_rename_keyboard
         prefix = f"Рад приветствовать тебя снова, {auth[0]} из {auth[1]}!"
     await message.answer(f"{prefix + TextFiles.GREETING}",
                          reply_markup=keyboard)
@@ -155,7 +156,7 @@ def get_current_station(message: Message, state: FSMContext) -> StationCard:
     for group_id, station in enumerate(users_stations):
         if len(station) <= 5:
             if len(station) == 0:
-                return get_random_station(user_id, group_id, station)
+                return get_random_station(user_id, group_id)
 
             elif len(station) == 5 and station[-1][1] == 0:
                 pass
@@ -163,10 +164,10 @@ def get_current_station(message: Message, state: FSMContext) -> StationCard:
             elif station[-1][1] == 1:
                 return cards[group_id][station[-1][0]]
             else:
-                return get_random_station(user_id, group_id, station)
+                return get_random_station(user_id, group_id)
 
 
-def get_random_station(user_id: int, group: int, user_stations: []) -> StationCard:
+def get_random_station(user_id: int, group: int) -> StationCard:
     while True:
         try:
             station = random.randint(0, len(cards[group]) - 1)
@@ -192,14 +193,15 @@ async def check_answer(message: Message, state: FSMContext):
 
     try:
         print(message.text + ': ' + str(message.chat.id))
-        await message.answer(text=TextFiles.RIGHT_ANSWER)
         DB.close_station(user_id, card.id, card.group)
 
         if card.check_answer(message.text):
             DB.add_score(user_id, card.group + 1)
 
+        DB.add_time(user_id, DB.get_time_delt(user_id, card.id, card.group))
+
         await state.set_state(QuestStates.station_closed)
-        await play_quest(message, state)
+        await message.answer(text=TextFiles.RIGHT_ANSWER, reply_markup=MainKeyboards.continue_keyboard)
 
     except:
         await message.reply(text=TextFiles.TYPE_ERROR_MESSAGE)
@@ -220,8 +222,8 @@ async def check_answer(message: Message, state: FSMContext):
 
 
 async def main() -> None:
-    dp.include_router(AdminCommands.router)
-    AdminCommands.bot_init(bot)
+    dp.include_router(MainHandler.router)
+    MainHandler.bot_init(bot)
 
     global cards
     cards = [StationsFactory().get_cards_first_group(),
