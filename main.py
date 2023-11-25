@@ -79,7 +79,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
         keyboard = MainKeyboards.continue_rename_keyboard
         prefix = f"Рад приветствовать тебя снова, {auth[0]} из {auth[1]}!"
     await message.answer(f"{prefix + TextFiles.GREETING}",
-                         reply_markup=keyboard)
+                         reply_markup=keyboard, parse_mode='HTML')
 
 
 async def drop_inline(call: types.CallbackQuery) -> None:
@@ -147,10 +147,10 @@ def get_current_station(message: Message, state: FSMContext) -> StationCard:
     user_id = message.chat.id
 
     users_stations = [DB.get_first_group_stations(user_id),
-                      DB.get_second_group_stations(user_id),
-                      DB.get_third_group_stations(user_id)]
+                      DB.get_second_group_stations(user_id)]
+                      # DB.get_third_group_stations(user_id)]
 
-    if len(users_stations[0]) + len(users_stations[1]) + len(users_stations[2]) == 15:
+    if len(users_stations[0]) + len(users_stations[1]) == 10:
         return StationCard('', '', 0, 0)  # complete
 
     for group_id, station in enumerate(users_stations):
@@ -215,9 +215,11 @@ async def check_answer(message: Message, state: FSMContext):
         print(message.text + ': ' + str(message.chat.id))
     except:
         pass
-    if await state.get_state() not in [QuestStates.branch_auth, QuestStates.start_state]:
+    s = await state.set_state()
+
+    if s is None:
         await bot.send_message(chat_id=user_id, text=TextFiles.ERROR_MESSAGE)
-    else:
+    elif s in [QuestStates.start_state, QuestStates.branch_auth]:
         await message.answer(TextFiles.INVALID_TEXT)
 
 
@@ -227,8 +229,8 @@ async def main() -> None:
 
     global cards
     cards = [StationsFactory().get_cards_first_group(),
-             StationsFactory().get_cards_second_group(),
-             StationsFactory().get_cards_third_group()]
+             StationsFactory().get_cards_second_group()]
+             # StationsFactory().get_cards_third_group()]
 
     # await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)

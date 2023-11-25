@@ -5,7 +5,7 @@ class StationCard:
     id: int
 
     def __init__(self, station_name: str, answer: str, group: int, id: int):
-        self.question = station_name.strip().lower()
+        self.question = station_name
         self.answer = answer.strip().lower()
         self.group = group
         self.id = id
