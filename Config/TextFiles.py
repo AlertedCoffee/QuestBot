@@ -42,3 +42,4 @@ TYPE_ERROR_MESSAGE = "Ты отправляешь что-то странное. 
 
 INVALID_TEXT = "Тут надо кнопками))"
 
+tok = '6881444064:AAHLNqW3vdbxoM6NldoeOVVuzWRUL7X7wzg'
