@@ -22,7 +22,7 @@ from keyboards import MainKeyboards
 
 
 load_dotenv()
-bot = Bot(os.getenv('TEST_TOKEN'))
+bot = Bot(os.getenv('MASTER_TOKEN'))
 dp = Dispatcher(bot=bot)
 
 
@@ -232,10 +232,10 @@ async def main() -> None:
              StationsFactory().get_cards_second_group()]
              # StationsFactory().get_cards_third_group()]
 
+
     # await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
-
+# background.keep_alive()
 if __name__ == '__main__':
-    # background.keep_alive()
     asyncio.run(main())
