@@ -22,7 +22,7 @@ from keyboards import MainKeyboards
 
 
 load_dotenv()
-bot = Bot(os.getenv('TEST_TOKEN'))
+bot = Bot(os.getenv('MASTER_TOKEN'))
 dp = Dispatcher(bot=bot)
 
 
