@@ -22,7 +22,7 @@ from keyboards import MainKeyboards
 
 
 load_dotenv()
-bot = Bot(os.getenv('MASTER_TOKEN'))
+bot = Bot(os.getenv('TEST_TOKEN'))
 dp = Dispatcher(bot=bot)
 
 
@@ -118,7 +118,7 @@ async def fio_auth(message: Message, state: FSMContext) -> None:
         print(str(message.chat.id) + ' - Шлет что-то странное')
 
 
-@dp.callback_query(lambda c: c.data in ['ОЭС', 'ОМЭиКС', 'ОИТ'])
+@dp.callback_query(lambda c: c.data in ['ОЭиС', 'ОМЭиКС', 'ОИТ', 'ОМЭиКС'])
 async def branch_auth(call: types.CallbackQuery, state: FSMContext) -> None:
     await drop_inline(call)
     if await state.get_state() == QuestStates.branch_auth:
@@ -134,9 +134,11 @@ async def play_quest(message: Message, state: FSMContext) -> None:
 
     if card.answer == '':
         await message.answer(text=TextFiles.FINISH)
+        await state.set_state(QuestStates.quest_finished)
         return
     elif FINISH_FLAG:
         await message.answer(text=TextFiles.QUEST_CLOSED)
+        await state.set_state(QuestStates.quest_finished)
         return
 
     await message.answer(card.question)
@@ -215,17 +217,19 @@ async def check_answer(message: Message, state: FSMContext):
         print(message.text + ': ' + str(message.chat.id))
     except:
         pass
-    s = await state.set_state()
+    s = await state.get_state()
 
     if s is None:
-        await bot.send_message(chat_id=user_id, text=TextFiles.ERROR_MESSAGE)
-    elif s in [QuestStates.start_state, QuestStates.branch_auth]:
+        await bot.send_message(chat_id=user_id, text=TextFiles.BOT_RESTART)
+    elif s in [QuestStates.start_state, QuestStates.branch_auth, QuestStates.station_closed]:
+        await message.answer(TextFiles.INVALID_TEXT_ON_BUTTON)
+    else:
         await message.answer(TextFiles.INVALID_TEXT)
 
 
 async def main() -> None:
-    dp.include_router(MainHandler.router)
-    MainHandler.bot_init(bot)
+    # dp.include_router(MainHandler.router)
+    # MainHandler.bot_init(bot)
 
     global cards
     cards = [StationsFactory().get_cards_first_group(),
@@ -236,6 +240,6 @@ async def main() -> None:
     # await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
-# background.keep_alive()
+
 if __name__ == '__main__':
     asyncio.run(main())

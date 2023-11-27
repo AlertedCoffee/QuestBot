@@ -7,4 +7,5 @@ class QuestStates(StatesGroup):
     start_state = State()
     fio_auth = State()
     branch_auth = State()
+    quest_finished = State()
 
