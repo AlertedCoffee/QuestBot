@@ -63,6 +63,41 @@ async def alert_users(message: Message) -> None:
         pass
 
 
+@dp.message(filters.Command('alert_to'))
+async def alert_users(message: Message) -> None:
+    if message.from_user.id not in [542687360]:
+        return
+
+    try:
+        text = message.html_text.replace('/alert_to', '')
+        text = text.split('##')
+        test = '##'.join(text[1:])
+        await bot.send_message(text=test, chat_id=text[0].strip(), parse_mode='HTML')
+    except Exception as ex:
+        await bot.send_message(text=str(ex), chat_id=542687360)
+
+
+@dp.message(filters.Command('leaders'))
+async def alert_users(message: Message) -> None:
+    admin = 542687360
+    if message.from_user.id != admin:
+        return
+
+    table = [DB.get_oi_leaders_list(),
+             DB.get_oe_leaders_list(),
+             DB.get_om_leaders_list(),
+             DB.get_oo_leaders_list()]
+
+    text = ""
+    for branch in table:
+        if branch:
+            text += "\n\n" + branch[0][3] + "\n"
+            for person in branch:
+                text += f"<code>{person[0]}</code> @{person[1]} {person[2]}\nбаллы: {person[4]} время: {person[5]} \n\n"
+
+    await bot.send_message(chat_id=admin, text=text, parse_mode='HTML')
+
+
 @dp.message(filters.CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     await state.set_state(QuestStates.start_state)
@@ -118,7 +153,7 @@ async def fio_auth(message: Message, state: FSMContext) -> None:
         print(str(message.chat.id) + ' - Шлет что-то странное')
 
 
-@dp.callback_query(lambda c: c.data in ['ОЭиС', 'ОМЭиКС', 'ОИТ', 'ОМЭиКС'])
+@dp.callback_query(lambda c: c.data in ['ОЭиС', 'ОМЭиКС', 'ОИТ', 'ООПНиПТ'])
 async def branch_auth(call: types.CallbackQuery, state: FSMContext) -> None:
     await drop_inline(call)
     if await state.get_state() == QuestStates.branch_auth:
