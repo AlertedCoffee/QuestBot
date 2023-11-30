@@ -11,7 +11,7 @@ continue_rename_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboard
 branch_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='ОИТ', callback_data='ОИТ'),
                                                          InlineKeyboardButton(text='ОЭиС', callback_data='ОЭиС'),
                                                          InlineKeyboardButton(text='ОМЭиКС', callback_data='ОМЭиКС')],
-                                                        [InlineKeyboardButton(text='ООПНиПТ', callback_data='ОМЭиКС')]])
+                                                        [InlineKeyboardButton(text='ООПНиПТ', callback_data='ООПНиПТ')]])
 
 continue_keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Продолжить',
                                                                                 callback_data='continue_quest')]])

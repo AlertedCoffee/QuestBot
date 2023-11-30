@@ -244,6 +244,54 @@ def get_score(user_id: int) -> int:
     return result
 
 
+def get_oi_leaders_list() -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM users where branch = 'ОИТ'
+order by score desc, time;""")
+    string_result = cursor.fetchall()
+
+    connection.close()
+    return string_result[:3]
+
+
+def get_oe_leaders_list() -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM users where branch = 'ОЭиС'
+order by score desc, time;""")
+    string_result = cursor.fetchall()
+
+    connection.close()
+    return string_result[:3]
+
+
+def get_om_leaders_list() -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM users where branch = 'ОМЭиКС'
+order by score desc, time;""")
+    string_result = cursor.fetchall()
+
+    connection.close()
+    return string_result[:3]
+
+
+def get_oo_leaders_list() -> []:
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""SELECT * FROM users where branch = 'ООПНиПТ'
+order by score desc, time;""")
+    string_result = cursor.fetchall()
+
+    connection.close()
+    return string_result[:3]
+
+
 def add_score(user_id: int, value: int) -> None:
     connection = sql.connect('userbase.db')
     cursor = connection.cursor()
