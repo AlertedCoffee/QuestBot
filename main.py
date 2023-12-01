@@ -22,7 +22,7 @@ from keyboards import MainKeyboards
 
 
 load_dotenv()
-bot = Bot(os.getenv('MASTER_TOKEN'))
+bot = Bot(os.getenv('TEST_TOKEN'))
 dp = Dispatcher(bot=bot)
 
 
@@ -119,6 +119,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
 
     if DB.get_closed_flag():
         await message.answer(TextFiles.QUEST_CLOSED)
+        await state.set_state(QuestStates.quest_finished)
         return
 
     keyboard = []
@@ -187,6 +188,7 @@ async def branch_auth(call: types.CallbackQuery, state: FSMContext) -> None:
 async def play_quest(message: Message, state: FSMContext) -> None:
     if DB.get_closed_flag():
         await message.answer(TextFiles.QUEST_CLOSED)
+        await state.set_state(QuestStates.quest_finished)
         return
 
     if DB.get_finished_flag():
