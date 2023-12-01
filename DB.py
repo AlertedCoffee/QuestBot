@@ -27,6 +27,14 @@ def create_table() -> None:
            """)
     connection.commit()
 
+    cursor.execute("""CREATE TABLE IF NOT EXISTS flags(
+               finished bit,
+               closed bit);
+               """)
+
+    cursor.execute("insert into flags values(0, 1)")
+    connection.commit()
+
     connection.close()
 
 
@@ -38,6 +46,61 @@ def drop_table():
            """)
     cursor.execute("""drop TABLE IF EXISTS users_stations
                """)
+
+    cursor.execute("""drop TABLE IF EXISTS flags
+                   """)
+    connection.commit()
+    connection.close()
+
+
+def get_finished_flag():
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""
+                    select finished from flags;
+                    """)
+    result = cursor.fetchall()
+    connection.close()
+    if result[0][0] == 0:
+        return False
+    else:
+        return True
+
+
+def set_finished_flag(flag: bool):
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""
+                    update flags set finished = '{int(flag)}';
+                    """)
+    connection.commit()
+    connection.close()
+
+
+def get_closed_flag():
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""
+                    select closed from flags;
+                    """)
+    result = cursor.fetchall()
+    connection.close()
+    if result[0][0] == 0:
+        return False
+    else:
+        return True
+
+
+def set_closed_flag(flag: bool):
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"""
+                    update flags set closed = '{int(flag)}';
+                    """)
     connection.commit()
     connection.close()
 

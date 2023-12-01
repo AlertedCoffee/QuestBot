@@ -26,8 +26,6 @@ bot = Bot(os.getenv('MASTER_TOKEN'))
 dp = Dispatcher(bot=bot)
 
 
-FINISH_FLAG = False
-
 cards = []
 
 
@@ -35,16 +33,32 @@ cards = []
 async def finish_quest(message: Message) -> None:
     if message.from_user.id not in [542687360]:
         return
-    global FINISH_FLAG
-    FINISH_FLAG = True
+    DB.set_finished_flag(True)
+    await message.answer("Закончен")
 
 
 @dp.message(filters.Command('finish_cancel'))
 async def finish_quest_cancel(message: Message) -> None:
     if message.from_user.id not in [542687360]:
         return
-    global FINISH_FLAG
-    FINISH_FLAG = False
+    DB.set_finished_flag(False)
+    await message.answer("Возобновлен")
+
+
+@dp.message(filters.Command('close'))
+async def finish_quest_cancel(message: Message) -> None:
+    if message.from_user.id not in [542687360]:
+        return
+    DB.set_closed_flag(True)
+    await message.answer("Закрыт")
+
+
+@dp.message(filters.Command('open'))
+async def finish_quest_cancel(message: Message) -> None:
+    if message.from_user.id not in [542687360]:
+        return
+    DB.set_closed_flag(False)
+    await message.answer("Открыт")
 
 
 @dp.message(filters.Command('alert'))
@@ -79,8 +93,7 @@ async def alert_users(message: Message) -> None:
 
 @dp.message(filters.Command('leaders'))
 async def alert_users(message: Message) -> None:
-    admin = 542687360
-    if message.from_user.id != admin:
+    if message.from_user.id not in [542687360]:
         return
 
     table = [DB.get_oi_leaders_list(),
@@ -94,13 +107,20 @@ async def alert_users(message: Message) -> None:
             text += "\n\n" + branch[0][3] + "\n"
             for person in branch:
                 text += f"<code>{person[0]}</code> @{person[1]} {person[2]}\nбаллы: {person[4]} время: {person[5]} \n\n"
-
-    await bot.send_message(chat_id=admin, text=text, parse_mode='HTML')
+    if text:
+        await message.answer(text=text, parse_mode='HTML')
+    else:
+        await message.answer("None")
 
 
 @dp.message(filters.CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     await state.set_state(QuestStates.start_state)
+
+    if DB.get_closed_flag():
+        await message.answer(TextFiles.QUEST_CLOSED)
+        return
+
     keyboard = []
     prefix = "Привет!"
     auth = DB.get_auth(message.chat.id)
@@ -165,14 +185,18 @@ async def branch_auth(call: types.CallbackQuery, state: FSMContext) -> None:
 
 
 async def play_quest(message: Message, state: FSMContext) -> None:
-    card = get_current_station(message, state)
+    if DB.get_closed_flag():
+        await message.answer(TextFiles.QUEST_CLOSED)
+        return
 
-    if card.answer == '':
-        await message.answer(text=TextFiles.FINISH)
+    if DB.get_finished_flag():
+        await message.answer(text=TextFiles.QUEST_FINISHED)
         await state.set_state(QuestStates.quest_finished)
         return
-    elif FINISH_FLAG:
-        await message.answer(text=TextFiles.QUEST_CLOSED)
+
+    card = get_current_station(message, state)
+    if card.answer == '':
+        await message.answer(text=TextFiles.FINISH)
         await state.set_state(QuestStates.quest_finished)
         return
 
