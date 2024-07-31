@@ -22,7 +22,7 @@ from keyboards import MainKeyboards
 
 
 load_dotenv()
-bot = Bot(os.getenv('MASTER_TOKEN'))
+bot = Bot(os.getenv('TEST_TOKEN'))
 dp = Dispatcher(bot=bot)
 
 
@@ -289,16 +289,13 @@ async def check_answer(message: Message, state: FSMContext):
 
 
 async def main() -> None:
-    # dp.include_router(MainHandler.router)
-    # MainHandler.bot_init(bot)
 
     global cards
     cards = [StationsFactory().get_cards_first_group(),
              StationsFactory().get_cards_second_group()]
              # StationsFactory().get_cards_third_group()]
 
-
-    # await bot.delete_webhook(drop_pending_updates=True)
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 

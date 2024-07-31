@@ -279,22 +279,6 @@ def close_station(user_id: int, question_id: int, group: int) -> None:
     connection.close()
 
 
-# def get_station_status(user_id: int) -> bool:
-#     connection = sql.connect('userbase.db')
-#     cursor = connection.cursor()
-#
-#     cursor.execute(f"SELECT question_opened FROM users where user_id = '{user_id}';")
-#     string_result = cursor.fetchall()
-#     result = string_result[0][0]
-#
-#     connection.close()
-#
-#     if result == 0:
-#         return False
-#     else:
-#         return True
-
-
 def get_score(user_id: int) -> int:
     connection = sql.connect('userbase.db')
     cursor = connection.cursor()
@@ -399,16 +383,6 @@ def add_time(user_id: int, value: int) -> None:
     connection.close()
 
 
-# def create_user(user_id: int, user_name: str, question_stations: str, score: int) -> None:
-#     connection = sql.connect('userbase.db')
-#     cursor = connection.cursor()
-#
-#     cursor.execute(f"""insert into users
-#             values('{user_id}', '{user_name}', '{question_stations}', {score})""")
-#     connection.commit()
-#     connection.close()
-
-
 def user_exist(user_id: int) -> bool:
     connection = sql.connect('userbase.db')
     cursor = connection.cursor()
@@ -421,3 +395,20 @@ def user_exist(user_id: int) -> bool:
         return True
     else:
         return False
+
+
+def get_stat():
+    connection = sql.connect('userbase.db')
+    cursor = connection.cursor()
+
+    cursor.execute(f"SELECT * FROM users where branch = 'ОИТ' order by score desc, time;")
+    result = cursor.fetchall()
+    connection.close()
+
+    temp1 = get_oo_leaders_list()
+    temp2 = get_oi_leaders_list()
+    temp3 = get_om_leaders_list()
+    temp4 = get_oe_leaders_list()
+
+    for elem in temp4:
+        print(f"{elem[2]} \t {elem[4]} \t {elem[5]}")
