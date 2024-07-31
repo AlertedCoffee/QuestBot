@@ -9,8 +9,8 @@
 <br>
 
 Чтобы собрать сие творения в корень нужны файлы:
-+ userbase.db
-+ .env <br>
++ _userbase.db_ <br> Инициализация чистой базы происходит через [DB.py](https://github.com/AlertedCoffee/QuestBot/blob/master/DB.py) и метод `create_table()`  
++ _.env_ <br>
 `TEST_TOKEN='yourtesttoken'` <br>
 `MASTER_TOKEN='yourprodtoken'`
 + ну и окружение с библиотеками в зависимости от ветки
