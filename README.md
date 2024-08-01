@@ -1,24 +1,21 @@
-# Квест на День Гоголя
-Отработал на базе ГБОУ Лицей № 64
+# Gogol Day Quest
+Worked at ГБОУ Лицей № 64. Quest with stations.
 
-Суть работы бота можно легко понять по приветствию от бота:
+**Functionality:**
 
-```
-Привет, искатель тайн и загадок! 
-Приглашаем тебя погрузиться в мир творчества Гоголя, наполненный мистикой и таинственностью.
+The user types /start and their data is entered into the database. Then, they are given a location where they need to solve a puzzle and write the answer. Answers are sent to the bot until the correct one is found. The quest is completed after all questions are answered.
 
-Сперва несколько правил:
-1) Бот будет по очереди выдавать тебе местонахождение вопросов, на которые ты должен ответить. Пропустить вопрос не получится! Следующее место появится только тогда, когда ты ответишь на вопрос.
+During the event, prizes were awarded among those who passed the lottery.
 
-2) Ответ - это только одно слово, ни больше, ни меньше. А количество попыток не ограничено, смело пиши свои предположения, а если окажешься не прав - просто подумай еще и присылай новый ответ.
+The bot handled the load of 150 people almost without issues, except for problems with the absence of a username for the user (it errors out when attempting to log actions in print(). Be cautious when using it).
 
-3) Если ты ответишь на все вопросы, приходи к нам в актовый зал и получи свой лотерейный билетик! Не упускай шанс попытать удачу, и не проспи сам розыгрыш. Победителей мы объявим в 15:00 в актовом зале.
+**Admin Commands:**
 
-Если возникнут какие-то проблемы, обязательно пиши: @куда-то
-```
++ `/start_quest` - Open the acceptance of responses.
++ `/alert <text>` - Send a notification.
++ `/finish` / `/cancel_finish` - End the acceptance of responses or cancel the ending.
 
-Бот почти без проблем переварил 150 человек нагрузки за исключением проблем с отсутствием username у пользователя (Уходит в ошибку при попытке логировать действия в print(). При использовании будьте внимательны)
 
-В проекте есть фласк-затычка [background.py](https://github.com/AlertedCoffee/QuestBot/blob/GogolDayQuest/background.py). Использовалось для пинга бота каждые 5 минут, чтобы хост на Repl.it не спал. 
+The project includes a Flask patch [background.py](https://github.com/AlertedCoffee/QuestBot/blob/GogolDayQuest/background.py). It was used to ping the bot every 5 minutes to prevent the host on Repl.it from sleeping.
 
-P.S. Никогда не занимайтесь этим бредом, проще арендовать нормальный VDS/VPS.
+P.S. Never engage in this nonsense; it's easier to rent a proper VDS/VPS.
