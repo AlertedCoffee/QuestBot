@@ -2,6 +2,7 @@
 Worked at the СПбПУ ИСПО
 
 **Functionality:**
+
 The user registers and selects their department. Then, they receive questions (10 from the first category, 5 from the second). The user submits their answers without knowing if they are correct. The results and response times are recorded in the database. Winners are determined by the number of points, and in the case of a tie, the fastest respondent gets an advantage in the leaderboard.
 
 The bot successfully handled a load of 256 users without any issues.
